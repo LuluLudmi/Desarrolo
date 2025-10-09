@@ -1,0 +1,152 @@
+AutoCONTROLLER
+package ar.edu.centro8.daw.tpn2.controller;
+import java.util.List;  
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.beans.factory.annotation.Autowired;
+import ar.edu.centro8.daw.tpn2.service.IAutoService;
+import ar.edu.centro8.daw.tpn2.model.Auto;  
+
+@RestController
+@CrossOrigin(origins = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE})
+
+public class AutoController {
+    @Autowired
+    private IAutoService autoService;
+
+    @GetMapping("/autos")
+    public List<Auto> getAutos() {
+        return autoService.getAutos();
+    }
+
+    @PostMapping("/autos")
+    public void save(@RequestBody Auto auto) {
+        autoService.save(auto);
+    }
+
+    @PutMapping("/autos/{idOriginal}")
+    public void edit(@PathVariable Long idOriginal, @RequestBody Auto auto) {
+        autoService.editAuto(idOriginal, auto.getId(), auto.getMarca(), auto.getPrecio());
+    }
+
+    @DeleteMapping("/autos/{id}")
+    public void delete(@PathVariable Long id) {
+        autoService.delete(id);
+    }  
+
+}
+MODEL
+package ar.edu.centro8.daw.tpn2.model;
+import jakarta.persistence.Entity;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.AllArgsConstructor;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+
+@Entity
+@Getter @Setter
+@AllArgsConstructor
+@Table(name="autos")
+
+public class Auto {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String marca;
+    private int precio;
+
+    public Auto() {
+    }
+
+}
+SERVICE
+AUTOSERVICE
+package ar.edu.centro8.daw.tpn2.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import ar.edu.centro8.daw.tpn2.model.Auto;
+import ar.edu.centro8.daw.tpn2.repository.IAutoRepository;
+
+@Service
+
+public class AutoService implements IAutoService {
+    @Autowired
+    private IAutoRepository autoRepo;
+
+    @Override
+    public List<Auto> getAutos() {
+        return autoRepo.findAll();
+    }
+
+    @Override
+    public void save(Auto auto) {
+        autoRepo.save(auto);
+    }
+
+    @Override
+    public void delete(Long id) {
+        autoRepo.deleteById(id);
+    }
+
+    @Override
+    public Auto findById(Long id) {
+        return autoRepo.findById(id).orElse(null);
+    }
+
+    @Override
+    public void editAuto(Long idOriginal, Long idNueva, String nuevaMarca, int nuevoPrecio) {
+        Auto auto = this.findById(idOriginal);
+        if (auto != null) {
+            auto.setId(idNueva);
+            auto.setMarca(nuevaMarca);
+            auto.setPrecio(nuevoPrecio);
+            this.save(auto);
+        }
+    }
+}
+    
+IAUTOSERVICE
+package ar.edu.centro8.daw.tpn2.service;
+
+import java.util.List;
+
+import ar.edu.centro8.daw.tpn2.model.Auto;
+
+public interface IAutoService {
+    public List <Auto> getAutos();
+
+    public void save (Auto auto);
+
+    public void delete (Long id);
+
+    public Auto findById (Long id);
+
+    public void editAuto(Long idOriginal, Long idNueva, String nuevaMarca, int nuevoPrecio);
+
+}
+REPOSITORY
+IAUTOREPOSITORY
+package ar.edu.centro8.daw.tpn2.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+import ar.edu.centro8.daw.tpn2.model.Auto;
+
+@Repository
+public interface IAutoRepository extends JpaRepository<Auto, Long> {
+
+}
